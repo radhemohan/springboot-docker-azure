@@ -1,0 +1,165 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.azure.poc</groupId>
+	<artifactId>ms.azure.poc</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	
+	<!-- 
+		Commands to Run
+		1) builds to container image registry 
+			mvn compile jib:build  OR run as -> configuration -> maven build -> Goals -> jib:build 
+		2) To build to a Docker domain
+			mvn compile jib:dockerBuild
+	 -->
+	
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.5.6.RELEASE</version>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<!-- tag::actuator[] -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<!-- end::actuator[] -->
+		<!-- tag::tests[] -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- end::tests[] -->
+	</dependencies>
+
+	<properties>
+		<java.version>1.8</java.version>
+		<maven.build.timestamp.format>yyyyMMddHHmmssSSS</maven.build.timestamp.format>
+		<java.version>1.8</java.version>
+		<jib-maven-plugin.version>1.2.0</jib-maven-plugin.version>
+		<docker.image.prefix>radheregistry.azurecr.io</docker.image.prefix>
+		<username>radheregistry</username>
+		<password>TGWsFm5x1s8a3oruYDl=VxyHdTC5wibu</password>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- <plugin>
+				<groupId>com.microsoft.azure</groupId>
+				<artifactId>azure-webapp-maven-plugin</artifactId>
+				<version>0.1.5</version>
+				<configuration>
+					<authentication>
+						<serverId>azure-auth</serverId>
+					</authentication>
+					<resourceGroup>maven-plugin</resourceGroup>
+					<appName>maven-web-app-${maven.build.timestamp}</appName>
+					<region>westus</region>
+					<javaVersion>1.8</javaVersion>
+					<deploymentType>ftp</deploymentType>
+					<stopAppDuringDeployment>true</stopAppDuringDeployment>
+					<resources>
+						<resource>
+							<directory>${project.basedir}/target</directory>
+							<targetPath>/</targetPath>
+							<includes>
+								<include>*.jar</include>
+							</includes>
+						</resource>
+						<resource>
+							<directory>${project.basedir}</directory>
+							<targetPath>/</targetPath>
+							<includes>
+								<include>web.config</include>
+							</includes>
+						</resource>
+					</resources>
+				</configuration>
+			</plugin> -->
+			<plugin>
+			<!--
+						Jib builds optimized Docker and OCI images for your Java applications without a Docker daemon - and without deep mastery of Docker best-practices.
+						It is available as plugins for Maven and Gradle and as a Java library. 
+			 -->
+				<artifactId>jib-maven-plugin</artifactId>
+				<groupId>com.google.cloud.tools</groupId>
+				<version>${jib-maven-plugin.version}</version>
+				<configuration>
+					<from>
+						<image>openjdk:8-jre-alpine</image>
+					</from>
+					<to>
+						<image>${docker.image.prefix}/${project.artifactId}</image>
+						<auth>
+							<username>${username}</username>
+							<password>${password}</password>
+						</auth>
+					</to>
+				</configuration>
+			</plugin>
+			<plugin>
+			<!--  Docker Client -->
+				<groupId>com.spotify</groupId>
+				<artifactId>dockerfile-maven-plugin</artifactId>
+				<version>1.4.9</version>
+				<configuration>
+					<repository>${docker.image.prefix}/${project.artifactId}</repository>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>unpack</id>
+						<phase>package</phase>
+						<goals>
+							<goal>unpack</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>${project.groupId}</groupId>
+									<artifactId>${project.artifactId}</artifactId>
+									<version>${project.version}</version>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
